@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CM QueueHub - Student Tracking</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<style>
+*{ margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
+body{ min-height:100vh; display:flex; justify-content:center; align-items:center; background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('background2.jpg') no-repeat center center/cover; }
+.container{ text-align:center; background:rgba(255,255,255,0.15); backdrop-filter:blur(15px); padding:40px; border-radius:20px; width:90%; max-width:450px; box-shadow:0 10px 30px rgba(0,0,0,0.3); }
+h1{ color:#d4f5d4; margin-bottom:10px; }
+p{ color:#a8e6a3; margin-bottom:20px; }
+.queue-number{ font-size:50px; font-weight:bold; color:white; margin:20px 0; }
+.status{ font-size:16px; margin-bottom:10px; color:#fff; }
+.waiting-time{ font-size:14px; color:#ddd; margin-bottom:20px; padding:8px 16px; background:rgba(255,255,255,0.1); border-radius:20px; display:inline-block; }
+.position-badge{ background:rgba(255,255,255,0.2); padding:8px 16px; border-radius:20px; display:inline-block; margin:10px 0; color:white; font-size:16px; }
+.next-to-serve{ background:rgba(255,215,0,0.3)!important; color:#ffd700!important; animation:pulse 2s infinite; }
+.available-now{ background:rgba(0,255,0,0.3)!important; color:#00ff00!important; animation:glow 2s infinite; }
+@keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.7;} }
+@keyframes glow{ 0%,100%{box-shadow:0 0 5px #00ff00;} 50%{box-shadow:0 0 20px #00ff00;} }
+input{ width:100%; padding:12px; border:none; border-radius:10px; margin-bottom:12px; outline:none; font-size:15px; }
+button{ padding:12px 25px; border:none; border-radius:10px; background:#0f9b0f; color:white; font-size:16px; cursor:pointer; transition:0.3s; margin:5px; }
+button:hover{ background:#0c7a0c; }
+.leave-btn{ background:#ff4d4d; }
+.leave-btn:hover{ background:#cc0000; }
+.back{ margin-top:15px; display:block; color:#a8e6a3; text-decoration:none; padding:10px 20px; border:2px solid rgba(168,230,163,0.5); border-radius:25px; transition:0.3s; max-width:220px; margin:20px auto 0; }
+.back:hover{ background:rgba(168,230,163,0.2); }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>🎓 Student Queue</h1>
+    <p>CM QueueHub - Cloud Live Tracking</p>
+
+    <div id="inputFields">
+        <input type="text" id="studentNameInput" placeholder="Enter Student Name">
+        <input type="text" id="studentIdInput" placeholder="Enter Student ID Number">
+    </div>
+
+    <div class="position-badge" id="positionBadge">Ready to Join</div>
+    <div class="queue-number" id="queueNumber">---</div>
+
+    <div class="status" id="studentName">Name: ---</div>
+    <div class="status" id="studentId">Student ID: ---</div>
+    <div class="status" id="studentPurpose">Purpose: ---</div>
+    <div class="status" id="status">Ready</div>
+    <div class="waiting-time" id="waitingTime"></div>
+
+    <div>
+        <button id="joinBtn" onclick="handleJoin()">Join Queue</button>
+        <button id="leaveBtn" class="leave-btn" onclick="handleLeave()" style="display:none;">Leave Queue</button>
+    </div>
+    <a href="registrar-home.html" class="back">← Back to Dashboard</a>
+</div>
+
+<script type="module" src="registrar-system.js"></script>
+
+<script>
+// Key aligned with system engine logic mapping rules
+let uniqueSessionId = localStorage.getItem("registrarStudentSessionId") || "reg_std_" + Math.random().toString(36).substr(2, 9);
+localStorage.setItem("registrarStudentSessionId", uniqueSessionId);
+
+let hasAlertedNext = false;
+let flashTimer = null;
+
+function getSmartWaitTime(queue, position){
+    const activeServing = Object.values(queue.windows || {}).filter(w => w !== null).length;
+    const actualPosition = position - activeServing;
+    if(actualPosition <= 0) return { text:"Available Now! 🚀", class:"available-now" };
+    if(actualPosition === 1) return { text:"Next to Serve! ⏳", class:"next-to-serve" };
+    return { text:`Wait: ${Math.max(1, actualPosition * 4)} min`, class:"" };
+}
+
+window.handleJoin = function() {
+    if(!window.sysBackend) return;
+    const name = document.getElementById("studentNameInput").value.trim();
+    const idNum = document.getElementById("studentIdInput").value.trim();
+    const purpose = localStorage.getItem("selectedStudentPurpose") || "General Inquiries";
+
+    if(!name || !idNum) { alert("Please input credentials."); return; }
+
+    window.sysBackend.joinQueue("student", name, idNum, purpose, uniqueSessionId);
+};
+
+window.handleLeave = function() {
+    if(!window.sysBackend || !confirm("Leave queue?")) return;
+    window.sysBackend.leaveQueue(uniqueSessionId);
+};
+
+function triggerDeviceAlert(alertMessage) {
+    if (navigator.vibrate) {
+        navigator.vibrate([250, 100, 250, 100, 400]);
+    }
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.setValueAtTime(950, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.25);
+    } catch(e) { console.log("Audio alert initialized."); }
+
+    let isFlash = false;
+    if (flashTimer) clearInterval(flashTimer);
+    flashTimer = setInterval(() => {
+        document.title = isFlash ? `⚠️ ${alertMessage} ⚠️` : "🎫 CM QueueHub Tracker";
+        isFlash = !isFlash;
+    }, 500);
+}
+
+function clearDeviceAlert() {
+    hasAlertedNext = false;
+    if (flashTimer) {
+        clearInterval(flashTimer);
+        flashTimer = null;
+    }
+}
+
+function refreshScreen(queue) {
+    const list = queue.list || [];
+    const windows = queue.windows || {};
+    
+    let myItem = list.find(q => q.sessionId === uniqueSessionId);
+    let activeWindowNum = null;
+    
+    for (let i = 1; i <= 3; i++) {
+        if (windows[i] && windows[i].sessionId === uniqueSessionId) {
+            myItem = windows[i];
+            activeWindowNum = i;
+        }
+    }
+
+    const badge = document.getElementById("positionBadge");
+    const qNum = document.getElementById("queueNumber");
+    const statusEl = document.getElementById("status");
+    const waitTime = document.getElementById("waitingTime");
+    const chosenPurpose = localStorage.getItem("selectedStudentPurpose") || "General Inquiries";
+
+    if (myItem) {
+        document.getElementById("inputFields").style.display = "none";
+        document.getElementById("joinBtn").style.display = "none";
+        document.getElementById("leaveBtn").style.display = "inline-block";
+
+        qNum.textContent = myItem.number;
+        
+        const dispName = myItem.studentName || myItem.name || "---";
+        const dispId = myItem.studentId || myItem.idNum || "---";
+
+        document.getElementById("studentName").textContent = `Name: ${dispName}`;
+        document.getElementById("studentId").textContent = `Student ID: ${dispId}`;
+        document.getElementById("studentPurpose").textContent = `Purpose: ${myItem.purpose}`;
+
+        if (activeWindowNum) {
+            badge.textContent = "Now Serving";
+            statusEl.textContent = `Status: Proceed to Window ${activeWindowNum}!`;
+            waitTime.textContent = "Your turn! 🎉";
+            waitTime.className = "waiting-time available-now";
+            
+            if (!hasAlertedNext) {
+                triggerDeviceAlert(`PROCEED TO WINDOW ${activeWindowNum}`);
+                hasAlertedNext = true;
+            }
+        } else {
+            const idx = list.findIndex(q => q.sessionId === uniqueSessionId) + 1;
+            badge.textContent = `Position: ${idx}`;
+            statusEl.textContent = "Status: Waiting in Line";
+            const waitInfo = getSmartWaitTime(queue, idx);
+            waitTime.textContent = waitInfo.text;
+            waitTime.className = `waiting-time ${waitInfo.class}`;
+            
+            if (waitInfo.class === "next-to-serve") {
+                if (!hasAlertedNext) {
+                    triggerDeviceAlert("YOUR TURN IS NEXT");
+                    hasAlertedNext = true;
+                }
+            } else {
+                clearDeviceAlert();
+                document.title = `🎫 Line Position: ${idx}`;
+            }
+        }
+    } else {
+        document.getElementById("inputFields").style.display = "block";
+        document.getElementById("joinBtn").style.display = "inline-block";
+        document.getElementById("leaveBtn").style.display = "none";
+        
+        clearDeviceAlert();
+        document.title = "CM QueueHub - Student Tracking";
+        
+        badge.textContent = "Not in queue";
+        qNum.textContent = "---";
+        document.getElementById("studentName").textContent = "Name: ---";
+        document.getElementById("studentId").textContent = "Student ID: ---";
+        document.getElementById("studentPurpose").textContent = `Purpose: ${chosenPurpose}`;
+        statusEl.textContent = "Ready - Join Queue";
+        waitTime.textContent = "";
+    }
+}
+
+const hook = setInterval(() => {
+    if (window.sysBackend) {
+        window.sysBackend.listenToCloudUpdates((state) => {
+            refreshScreen(state);
+        });
+        clearInterval(hook);
+    }
+}, 200);
+</script>
+</body>
+</html>

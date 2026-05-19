@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CM QueueHub - Finance Office</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background:
+        linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)),
+        url('background2.jpg') no-repeat center center/cover;
+}
+
+.main-container {
+    width: 90%;
+    max-width: 1000px;
+    text-align: center;
+}
+
+/* HEADER */
+.header {
+    margin-bottom: 30px;
+}
+
+.logo-placeholder {
+    width: 90px;
+    height: 90px;
+    margin: 0 auto 15px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.logo-placeholder img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #d4f5d4;
+    text-shadow: 2px 2px 6px rgba(0,0,0,0.5);
+}
+
+.header p {
+    font-size: 14px;
+    color: #a8e6a3;
+}
+
+/* CARD CONTAINER */
+.container {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(15px);
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    margin-bottom: 20px;
+}
+
+.card-container {
+    display: flex;
+    gap: 25px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.card {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    width: 220px;
+    cursor: pointer;
+    transition: 0.3s;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.card:hover {
+    transform: translateY(-10px) scale(1.03);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+}
+
+.icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+}
+
+.card h2 {
+    margin-bottom: 10px;
+}
+
+.card p {
+    font-size: 14px;
+    color: #666;
+}
+
+/* LIVE STATUS PANELS */
+.live-box {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(15px);
+    padding: 30px 25px;
+    border-radius: 20px;
+    color: white;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.live-box h3 {
+    color: #d4f5d4;
+    margin-bottom: 20px;
+    font-size: 20px;
+    letter-spacing: 0.5px;
+}
+
+/* Multi-Window Grid Setup */
+.windows-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.window-card {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 15px;
+    border-radius: 12px;
+    transition: background 0.3s ease;
+}
+
+.window-card.active-serving {
+    background: rgba(15, 155, 15, 0.2);
+    border-color: rgba(168, 230, 163, 0.4);
+}
+
+.window-title {
+    font-size: 13px;
+    text-transform: uppercase;
+    color: #a8e6a3;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+}
+
+.window-token {
+    font-size: 32px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.window-card.active-serving .window-token {
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+#count {
+    color: #e2fcd2;
+    font-size: 15px;
+    font-weight: 500;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 15px;
+}
+
+/* FOOTER */
+.footer {
+    margin-top: 20px;
+    font-size: 12px;
+    color: #d4f5d4;
+    opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+    .card-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    .windows-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="main-container">
+
+    <div class="header">
+        <div class="logo-placeholder">
+            <img src="cmlogo.png" alt="School Logo" onerror="this.style.display='none'">
+        </div>
+
+        <h1>CM QueueHub</h1>
+        <p>Finance Office Queue Management</p>
+    </div>
+
+    <div class="container">
+        <div class="card-container">
+            <div class="card" onclick="goToPage('admin')">
+                <div class="icon">🛠️</div>
+                <h2>Admin</h2>
+                <p>Manage queues and monitor system</p>
+            </div>
+
+            <div class="card" onclick="goToPage('student')">
+                <div class="icon">🎓</div>
+                <h2>Student</h2>
+                <p>Get queue number and track status</p>
+            </div>
+
+            <div class="card" onclick="goToPage('visitor')">
+                <div class="icon">👤</div>
+                <h2>Visitor</h2>
+                <p>Quick access without account</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="live-box">
+        <h3>🔴 Live Serving Status</h3>
+        
+        <div class="windows-grid">
+            <div class="window-card" id="winCard1">
+                <div class="window-title">Window 1</div>
+                <div class="window-token" id="winToken1">---</div>
+            </div>
+            
+            <div class="window-card" id="winCard2">
+                <div class="window-title">Window 2</div>
+                <div class="window-token" id="winToken2">---</div>
+            </div>
+            
+            <div class="window-card" id="winCard3">
+                <div class="window-title">Window 3</div>
+                <div class="window-token" id="winToken3">---</div>
+            </div>
+        </div>
+
+        <p id="count">Connecting to cloud engine...</p>
+    </div>
+
+    <div class="footer">
+        © 2026 CM QueueHub | College of Maasin
+    </div>
+
+</div>
+
+<script type="module" src="queue-system.js"></script>
+
+<script>
+/* PAGE NAVIGATION - ROUTES TO FINANCE PORTALS */
+function goToPage(type) {
+    document.body.style.opacity = "0.5";
+    document.body.style.transition = "0.3s";
+
+    setTimeout(() => {
+        if (type === 'admin') {
+            window.location.href = "admin-login.html";
+        } else if (type === 'student') {
+            window.location.href = "student-service.html";
+        } else {
+            window.location.href = "visitor-service.html";
+        }
+    }, 300);
+}
+
+/* REAL-TIME MULTI-WINDOW TRACKING FOR FINANCE DATA STREAM */
+function initializeLiveTracking() {
+    const checkEngineLoop = setInterval(() => {
+        // Targets your original window system backend object
+        if (window.sysBackend) {
+            clearInterval(checkEngineLoop);
+            
+            window.sysBackend.listenToCloudUpdates((liveQueueData) => {
+                if (!liveQueueData) return;
+
+                const waitingList = liveQueueData.list || [];
+                const activeWindows = liveQueueData.windows || { 1: null, 2: null, 3: null };
+
+                // Map live counters independently
+                for (let i = 1; i <= 3; i++) {
+                    const cardEl = document.getElementById(`winCard${i}`);
+                    const tokenEl = document.getElementById(`winToken${i}`);
+                    const currentServedPerson = activeWindows[i];
+
+                    if (currentServedPerson && currentServedPerson.number) {
+                        tokenEl.innerText = currentServedPerson.number;
+                        cardEl.classList.add("active-serving");
+                    } else {
+                        tokenEl.innerText = "---";
+                        cardEl.classList.remove("active-serving");
+                    }
+                }
+
+                document.getElementById("count").innerText = `Total People Waiting in Queue: ${waitingList.length}`;
+            });
+        }
+    }, 100);
+}
+
+// Fire tracking loop setup
+initializeLiveTracking();
+</script>
+
+</body>
+</html>
